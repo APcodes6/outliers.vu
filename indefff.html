@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OUTLIERS - Bend The Rules</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            cursor: none;
+            background: radial-gradient(ellipse at center, #0a0000 0%, #000000 100%);
+        }
+
+        /* Custom Cursor */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ff0000;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.1s ease;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            mix-blend-mode: screen;
+        }
+
+        .cursor-follower {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: all 0.3s ease;
+        }
+
+        /* Contract Address Bar - Subtle Central */
+        .ca-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+        }
+
+        .ca-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+
+        .ca-wrapper:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.8);
+            border-color: rgba(255, 0, 0, 0.2);
+        }
+
+        .ca-label {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .ca-address {
+            font-family: 'Courier New', monospace;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .ca-wrapper:hover .ca-address {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .copy-btn {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .copy-btn:hover {
+            color: rgba(255, 100, 100, 0.8);
+            border-color: rgba(255, 0, 0, 0.3);
+            background: rgba(255, 0, 0, 0.05);
+        }
+
+        .copy-btn::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: rgba(100, 255, 100, 0.8);
+        }
+
+        .copy-btn.copied::after {
+            opacity: 1;
+        }
+
+        .copy-btn.copied .btn-text {
+            opacity: 0;
+        }
+
+        .btn-text {
+            transition: opacity 0.3s ease;
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: radial-gradient(circle at center, rgba(255, 0, 0, 0.05) 0%, transparent 50%);
+        }
+
+        /* DNA Container */
+        .dna-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        /* Transform Container */
+        .transform-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        /* Energy Orb - Main Feature */
+        .energy-orb {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle at 30% 30%,
+                rgba(255, 255, 255, 0.9) 0%,
+                rgba(255, 100, 100, 0.8) 20%,
+                rgba(255, 0, 0, 0.7) 40%,
+                rgba(150, 0, 0, 0.6) 70%,
+                rgba(50, 0, 0, 0.5) 100%);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 60px rgba(255, 0, 0, 0.6),
+                0 0 120px rgba(255, 0, 0, 0.3),
+                inset -10px -10px 20px rgba(100, 0, 0, 0.3),
+                inset 10px 10px 20px rgba(255, 150, 150, 0.3);
+            animation: orb-pulse 4s ease-in-out infinite;
+            transition: all 2s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 10;
+        }
+
+        @keyframes orb-pulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 
+                    0 0 60px rgba(255, 0, 0, 0.6),
+                    0 0 120px rgba(255, 0, 0, 0.3),
+                    inset -10px -10px 20px rgba(100, 0, 0, 0.3),
+                    inset 10px 10px 20px rgba(255, 150, 150, 0.3);
+            }
+            50% { 
+                transform: scale(1.1);
+                box-shadow: 
+                    0 0 80px rgba(255, 0, 0, 0.8),
+                    0 0 160px rgba(255, 0, 0, 0.4),
+                    inset -10px -10px 20px rgba(100, 0, 0, 0.3),
+                    inset 10px 10px 20px rgba(255, 150, 150, 0.3);
+            }
+        }
+
+        .energy-orb.transformed {
+            animation: orb-pulse-intense 2s ease-in-out infinite;
+            box-shadow: 
+                0 0 100px rgba(255, 0, 0, 0.9),
+                0 0 200px rgba(255, 0, 0, 0.5),
+                inset -10px -10px 20px rgba(100, 0, 0, 0.3),
+                inset 10px 10px 20px rgba(255, 150, 150, 0.3);
+        }
+
+        @keyframes orb-pulse-intense {
+            0%, 100% { 
+                transform: scale(1);
+                filter: brightness(1.2);
+            }
+            50% { 
+                transform: scale(1.15);
+                filter: brightness(1.5);
+            }
+        }
+
+        /* Orb Inner Glow */
+        .orb-core {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle,
+                rgba(255, 255, 255, 1) 0%,
+                rgba(255, 200, 200, 0.8) 30%,
+                rgba(255, 100, 100, 0.6) 60%,
+                transparent 100%);
+            border-radius: 50%;
+            animation: core-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes core-glow {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.3);
+                opacity: 1;
+            }
+        }
+
+        /* Hover Enhancement */
+        .transform-container:hover .energy-orb {
+            animation-duration: 2s;
+        }
+
+        .transform-container:hover .orb-core {
+            animation-duration: 1s;
+        }
+
+        /* Ultra-Realistic Wings */
+        .wings {
+            position: absolute;
+            width: 800px;
+            height: 400px;
+            opacity: 0;
+            transform: scale(0.3);
+            transition: all 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            filter: drop-shadow(0 20px 40px rgba(255, 0, 0, 0.3));
+        }
+
+        .wings.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .wing {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            top: 0;
+            transform-style: preserve-3d;
+        }
+
+        /* Detailed feather structure */
+        .feather-group {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        .primary-feather {
+            position: absolute;
+            background: linear-gradient(135deg,
+                rgba(255, 0, 0, 0.9) 0%,
+                rgba(255, 50, 50, 0.8) 30%,
+                rgba(255, 100, 100, 0.6) 60%,
+                rgba(255, 150, 150, 0.3) 90%,
+                transparent 100%);
+            border-radius: 50% 5% 50% 5%;
+            transform-origin: bottom center;
+        }
+
+        .secondary-feather {
+            position: absolute;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(255, 0, 0, 0.2) 10%,
+                rgba(255, 80, 80, 0.4) 50%,
+                rgba(255, 0, 0, 0.2) 90%,
+                transparent 100%);
+            border-radius: 80% 5% 80% 5%;
+        }
+
+        /* Left Wing Details */
+        .wing.left {
+            left: -100px;
+            transform-origin: right center;
+            animation: realistic-flap-left 5s ease-in-out infinite;
+        }
+
+        .wing.left .primary-feather:nth-child(1) {
+            width: 200px;
+            height: 80px;
+            top: 100px;
+            left: 0;
+            transform: rotate(-15deg) translateZ(10px);
+            box-shadow: 0 5px 20px rgba(255, 0, 0, 0.4);
+        }
+
+        .wing.left .primary-feather:nth-child(2) {
+            width: 220px;
+            height: 90px;
+            top: 130px;
+            left: -20px;
+            transform: rotate(-25deg) translateZ(8px);
+            opacity: 0.95;
+        }
+
+        .wing.left .primary-feather:nth-child(3) {
+            width: 240px;
+            height: 100px;
+            top: 160px;
+            left: -40px;
+            transform: rotate(-35deg) translateZ(6px);
+            opacity: 0.9;
+        }
+
+        .wing.left .primary-feather:nth-child(4) {
+            width: 250px;
+            height: 110px;
+            top: 190px;
+            left: -60px;
+            transform: rotate(-45deg) translateZ(4px);
+            opacity: 0.85;
+        }
+
+        .wing.left .primary-feather:nth-child(5) {
+            width: 260px;
+            height: 120px;
+            top: 220px;
+            left: -80px;
+            transform: rotate(-55deg) translateZ(2px);
+            opacity: 0.8;
+        }
+
+        /* Secondary feathers for texture */
+        .wing.left .secondary-feather:nth-child(6) {
+            width: 180px;
+            height: 60px;
+            top: 115px;
+            left: 10px;
+            transform: rotate(-20deg);
+            opacity: 0.5;
+        }
+
+        .wing.left .secondary-feather:nth-child(7) {
+            width: 190px;
+            height: 65px;
+            top: 145px;
+            left: -10px;
+            transform: rotate(-30deg);
+            opacity: 0.45;
+        }
+
+        .wing.left .secondary-feather:nth-child(8) {
+            width: 200px;
+            height: 70px;
+            top: 175px;
+            left: -30px;
+            transform: rotate(-40deg);
+            opacity: 0.4;
+        }
+
+        .wing.left .secondary-feather:nth-child(9) {
+            width: 210px;
+            height: 75px;
+            top: 205px;
+            left: -50px;
+            transform: rotate(-50deg);
+            opacity: 0.35;
+        }
+
+        .wing.left .secondary-feather:nth-child(10) {
+            width: 220px;
+            height: 80px;
+            top: 235px;
+            left: -70px;
+            transform: rotate(-60deg);
+            opacity: 0.3;
+        }
+
+        /* Right Wing (mirrored) */
+        .wing.right {
+            right: -100px;
+            transform-origin: left center;
+            animation: realistic-flap-right 5s ease-in-out infinite;
+        }
+
+        .wing.right .primary-feather:nth-child(1) {
+            width: 200px;
+            height: 80px;
+            top: 100px;
+            right: 0;
+            transform: rotate(15deg) translateZ(10px);
+            box-shadow: 0 5px 20px rgba(255, 0, 0, 0.4);
+        }
+
+        .wing.right .primary-feather:nth-child(2) {
+            width: 220px;
+            height: 90px;
+            top: 130px;
+            right: -20px;
+            transform: rotate(25deg) translateZ(8px);
+            opacity: 0.95;
+        }
+
+        .wing.right .primary-feather:nth-child(3) {
+            width: 240px;
+            height: 100px;
+            top: 160px;
+            right: -40px;
+            transform: rotate(35deg) translateZ(6px);
+            opacity: 0.9;
+        }
+
+        .wing.right .primary-feather:nth-child(4) {
+            width: 250px;
+            height: 110px;
+            top: 190px;
+            right: -60px;
+            transform: rotate(45deg) translateZ(4px);
+            opacity: 0.85;
+        }
+
+        .wing.right .primary-feather:nth-child(5) {
+            width: 260px;
+            height: 120px;
+            top: 220px;
+            right: -80px;
+            transform: rotate(55deg) translateZ(2px);
+            opacity: 0.8;
+        }
+
+        .wing.right .secondary-feather:nth-child(6) {
+            width: 180px;
+            height: 60px;
+            top: 115px;
+            right: 10px;
+            transform: rotate(20deg);
+            opacity: 0.5;
+        }
+
+        .wing.right .secondary-feather:nth-child(7) {
+            width: 190px;
+            height: 65px;
+            top: 145px;
+            right: -10px;
+            transform: rotate(30deg);
+            opacity: 0.45;
+        }
+
+        .wing.right .secondary-feather:nth-child(8) {
+            width: 200px;
+            height: 70px;
+            top: 175px;
+            right: -30px;
+            transform: rotate(40deg);
+            opacity: 0.4;
+        }
+
+        .wing.right .secondary-feather:nth-child(9) {
+            width: 210px;
+            height: 75px;
+            top: 205px;
+            right: -50px;
+            transform: rotate(50deg);
+            opacity: 0.35;
+        }
+
+        .wing.right .secondary-feather:nth-child(10) {
+            width: 220px;
+            height: 80px;
+            top: 235px;
+            right: -70px;
+            transform: rotate(60deg);
+            opacity: 0.3;
+        }
+
+        @keyframes realistic-flap-left {
+            0%, 100% { 
+                transform: rotateY(25deg) rotateZ(-3deg) translateZ(0);
+            }
+            25% {
+                transform: rotateY(35deg) rotateZ(-8deg) translateZ(20px);
+            }
+            50% { 
+                transform: rotateY(50deg) rotateZ(-12deg) translateZ(40px);
+            }
+            75% {
+                transform: rotateY(35deg) rotateZ(-8deg) translateZ(20px);
+            }
+        }
+
+        @keyframes realistic-flap-right {
+            0%, 100% { 
+                transform: rotateY(-25deg) rotateZ(3deg) translateZ(0);
+            }
+            25% {
+                transform: rotateY(-35deg) rotateZ(8deg) translateZ(20px);
+            }
+            50% { 
+                transform: rotateY(-50deg) rotateZ(12deg) translateZ(40px);
+            }
+            75% {
+                transform: rotateY(-35deg) rotateZ(8deg) translateZ(20px);
+            }
+        }
+
+        /* Energy Core - Removed */
+
+        /* Text Elements */
+        h1 {
+            font-size: 7rem;
+            letter-spacing: 20px;
+            margin-top: 80px;
+            text-shadow: 
+                0 0 40px rgba(255, 0, 0, 0.9),
+                0 0 80px rgba(255, 0, 0, 0.5),
+                0 0 120px rgba(255, 0, 0, 0.3),
+                0 -2px 0 rgba(150, 0, 0, 0.5);
+            animation: pulse 3s ease-in-out infinite;
+            font-weight: 100;
+            background: linear-gradient(180deg, #fff 0%, #ff0000 50%, #800000 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.02);
+                filter: brightness(1.2);
+            }
+        }
+
+        .tagline {
+            font-size: 2rem;
+            color: #ff6666;
+            margin-top: 20px;
+            letter-spacing: 10px;
+            opacity: 0;
+            animation: fadeIn 2s ease forwards;
+            animation-delay: 1s;
+            text-shadow: 
+                0 0 30px rgba(255, 0, 0, 0.8),
+                0 2px 4px rgba(0, 0, 0, 0.5);
+            font-weight: 300;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Click instruction */
+        .click-hint {
+            position: absolute;
+            bottom: 50px;
+            font-size: 0.9rem;
+            color: rgba(255, 100, 100, 0.5);
+            letter-spacing: 4px;
+            animation: hint-pulse 2s ease-in-out infinite;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        @keyframes hint-pulse {
+            0%, 100% { 
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            50% { 
+                opacity: 0.8;
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Ambient particles */
+        .particle {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background: #ff0000;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            box-shadow: 0 0 6px rgba(255, 0, 0, 0.8);
+            animation: ambient-float 20s infinite;
+        }
+
+        @keyframes ambient-float {
+            0% {
+                opacity: 0;
+                transform: translate(0, 100vh) scale(0);
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(100px, -100vh) scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Contract Address Bar -->
+    <div class="ca-container">
+        <div class="ca-wrapper">
+            <span class="ca-label">CA:</span>
+            <span class="ca-address" id="contractAddress">0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb7</span>
+            <button class="copy-btn" onclick="copyAddress()">
+                <span class="btn-text">COPY</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Custom Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="transform-container">
+            <div class="energy-orb" id="energyOrb">
+                <div class="orb-core"></div>
+            </div>
+            <div class="wings" id="wings">
+                <div class="wing left">
+                    <div class="feather-group">
+                        <div class="primary-feather"></div>
+                        <div class="primary-feather"></div>
+                        <div class="primary-feather"></div>
+                        <div class="primary-feather"></div>
+                        <div class="primary-feather"></div>
+                        <div class="secondary-feather"></div>
+                        <div class="secondary-feather"></div>
+                        <div class="secondary-feather"></div>
+                        <div class="secondary-feather"></div>
+                        <div class="secondary-feather"></div>
+                    </div>
+                </div>
+                <div class="wing right">
+                    <div class="feather-group">
+                        <div class="primary-feather"></div>
+                        <div class="primary-feather"></div>
+                        <div class="primary-feather"></div>
+                        <div class="primary-feather"></div>
+                        <div class="primary-feather"></div>
+                        <div class="secondary-feather"></div>
+                        <div class="secondary-feather"></div>
+                        <div class="secondary-feather"></div>
+                        <div class="secondary-feather"></div>
+                        <div class="secondary-feather"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h1>OUTLIERS</h1>
+        <p class="tagline">WE BEND THE RULES</p>
+        <p class="click-hint">CLICK TO TRANSFORM</p>
+    </section>
+
+    <script>
+        // Copy Contract Address Function
+        function copyAddress() {
+            const address = document.getElementById('contractAddress').innerText;
+            navigator.clipboard.writeText(address).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Click on address also copies
+        document.getElementById('contractAddress').addEventListener('click', copyAddress);
+
+        // Custom Cursor
+        const cursor = document.querySelector('.cursor');
+        const follower = document.querySelector('.cursor-follower');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX - 10 + 'px';
+            cursor.style.top = e.clientY - 10 + 'px';
+            
+            setTimeout(() => {
+                follower.style.left = e.clientX - 20 + 'px';
+                follower.style.top = e.clientY - 20 + 'px';
+            }, 100);
+        });
+
+        // Energy Orb with Wings Transformation
+        let transformed = false;
+        const transformContainer = document.querySelector('.transform-container');
+        
+        transformContainer.addEventListener('click', () => {
+            const energyOrb = document.getElementById('energyOrb');
+            const wings = document.getElementById('wings');
+            
+            if (!transformed) {
+                transformed = true;
+                energyOrb.classList.add('transformed');
+                wings.classList.add('active');
+                
+                // Create explosion effect around the orb
+                for (let i = 0; i < 30; i++) {
+                    createExplosionParticle();
+                }
+            } else {
+                transformed = false;
+                energyOrb.classList.remove('transformed');
+                wings.classList.remove('active');
+            }
+        });
+
+        // Explosion particles for transformation
+        function createExplosionParticle() {
+            const particle = document.createElement('div');
+            particle.style.position = 'absolute';
+            particle.style.width = '4px';
+            particle.style.height = '4px';
+            particle.style.background = `radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)`;
+            particle.style.borderRadius = '50%';
+            particle.style.left = '250px';
+            particle.style.top = '250px';
+            particle.style.boxShadow = '0 0 10px rgba(255, 0, 0, 1)';
+            particle.style.pointerEvents = 'none';
+            particle.style.zIndex = '1000';
+            
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 150 + Math.random() * 150;
+            const vx = Math.cos(angle) * velocity;
+            const vy = Math.sin(angle) * velocity;
+            
+            transformContainer.appendChild(particle);
+            
+            let opacity = 1;
+            let scale = 1;
+            const animation = setInterval(() => {
+                opacity -= 0.02;
+                scale += 0.02;
+                particle.style.opacity = opacity;
+                particle.style.transform = `scale(${scale})`;
+                particle.style.left = parseFloat(particle.style.left) + vx * 0.02 + 'px';
+                particle.style.top = parseFloat(particle.style.top) + vy * 0.02 + 'px';
+                
+                if (opacity <= 0) {
+                    clearInterval(animation);
+                    particle.remove();
+                }
+            }, 16);
+        }
+
+        // Ambient particles
+        function createAmbientParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * window.innerWidth + 'px';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+            document.body.appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 25000);
+        }
+
+        // Create ambient particles periodically
+        setInterval(createAmbientParticle, 3000);
+
+        // Initial particles
+        for (let i = 0; i < 3; i++) {
+            setTimeout(createAmbientParticle, i * 1000);
+        }
+
+        // Add glow effect on hover
+        transformContainer.addEventListener('mouseenter', () => {
+            if (!transformed) {
+                document.getElementById('energyOrb').style.filter = 'drop-shadow(0 0 40px rgba(255, 0, 0, 0.8))';
+            } else {
+                document.getElementById('wings').style.filter = 'drop-shadow(0 0 60px rgba(255, 0, 0, 0.6))';
+            }
+        });
+
+        transformContainer.addEventListener('mouseleave', () => {
+            document.getElementById('energyOrb').style.filter = '';
+            document.getElementById('wings').style.filter = 'drop-shadow(0 20px 40px rgba(255, 0, 0, 0.3))';
+        });
+    </script>
+</body>
+</html>
